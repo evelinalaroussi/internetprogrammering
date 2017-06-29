@@ -1,0 +1,24 @@
+<div ng-include="'navigation2.html'"></div>
+
+
+<div class="wrapper">
+  <div class="block" id="one">
+      <img src="./icons/animated-svg.gif">
+      <div class="content">
+        <h2>History</h2>
+        <ul>
+			<li class="followers" ng-repeat="follower in followingYouList">{{follower.name}} started following you {{ follower.date }}</li>
+		</ul>
+      </div>
+  </div>
+
+    <div class="block" id="two">
+      <img src="./icons/connected.jpg">
+      <div class="content">
+        <h2>You are following</h2>
+		<ul>
+			<li style="font-weight: bold" class="followers" ng-repeat="follower in followerList" ng-click='goto(follower.name)'>{{follower.name}}</li>
+		</ul>
+      </div>
+  </div>
+  </div>

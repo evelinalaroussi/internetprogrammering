@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html ng-app="chat">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.min.css">
+		<link rel="stylesheet/less" type="text/css" href="main.less">
+		<script src="https://www.gstatic.com/firebasejs/3.6.10/firebase.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-route.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/1.3.3/ui-bootstrap-tpls.min.js"></script>
+		<!-- not used in this project but very usefull for many things-->
+		<title>Map</title>
+	</head>
+
+	<body style="background-image:none !important">
+		<div id="buttondiv"><img src='http://maps.google.com/mapfiles/ms/icons/green-dot.png' onclick="initMap('green')"></img>
+		<img src='http://maps.google.com/mapfiles/ms/icons/blue-dot.png' onclick="initMap('blue')"></img>
+		<img src='http://maps.google.com/mapfiles/ms/icons/purple-dot.png' onclick="initMap('purple')"></img>
+		<img src='http://maps.google.com/mapfiles/ms/icons/yellow-dot.png' onclick="initMap('yellow')"></img>
+		<img src='http://maps.google.com/mapfiles/ms/icons/red-dot.png' onclick="initMap('red')"></img></div>
+		<div id="mapNameText" class="editable">
+    		
+		</div>
+		<div id="iconsdiv"><img src='./icons/default.png' onclick="changeMapStyle('default')"></img>
+		<img src='./icons/retro.png' onclick="changeMapStyle('retro')"></img>
+		<img src='./icons/silver.png' onclick="changeMapStyle('silver')"></img></div>
+		<div id="map" style="height: 660px; width: 95%;"></div>
+		<div id="info">1. Click a marker at the left to place it on the map. 2. Move it around as you want in the map, if you want to remove it or leave a comment just click it once. 3. Double click the marker to save it! <br><button id="gotit"> Got it.</button></div>
+		<div id="infosmall">Info</div>
+
+	    <script>  var config = {
+	    	apiKey: "AIzaSyDhntvPeLVBQ-nwppwAi2Gsqh7rBvT7Vl4",
+	    	  authDomain: "intnet-project.firebaseapp.com",
+	    	  databaseURL: "https://intnet-project.firebaseio.com",
+	    	  storageBucket: "intnet-project.appspot.com",
+	    	  messagingSenderId: "675053245114"
+		  };
+		</script>
+		<script async defer
+      	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_NKJtGA9JALONqzCFmJRxUn3-apPg9Gs&callback=initMap">
+      	</script>
+		<script src = "/socket.io/socket.io.js"></script>
+		<script src = "app.js"></script>
+		
+		<script src = "controllers.js"></script>
+		<script src = "services.js"></script>
+		<script>firebase.initializeApp(config);
+			
+			var db = firebase.database();
+
+			var params = location.href.split('?')[1].split('&');
+			data = {};
+			for (x in params)
+			 {
+			data[params[x].split('=')[0]] = params[x].split('=')[1];
+			 }
+
+			var activeUser = data.somedata;
+
+			 var markers = [];
+			 var uniqueId = 1;
+			 var marker;
+			 var k;
+			 var comment = "empty";
+			 var map;
+			 var style =[];
+			 var changestyle;
+			 var mapName;
+			 $("#infosmall").hide();
+
+
+			function initMap(markerstyle) {
+				changestyle = false;
+				var markerstyle=markerstyle;
+				markers = [];
+
+
+
+			var ref2 = db.ref("/maps");
+
+
+			ref2.once("value", function(snapshot) {
+			  var data = snapshot.val();   //Data is in JSON format.
+			  for (var i in data) {
+
+			  	if (data[i].user==activeUser) {
+			  		var mapType=data[i].styling;
+			  		console.log(data[i].mapName);
+			  		mapName = data[i].mapName;
+			  	}
+			  }
+			  	setMapStyle(mapType);
+			  	updateHTML("mapNameText",mapName);
+			  });
+
+			function updateHTML(elmId, value) {
+				  document.getElementById(elmId).innerHTML = value;
+				}
+
+			function setMapStyle(mapType) {
+				var mapURL = "/mapstyles/"+mapType;
+				var ref3 = db.ref(mapURL);
+
+				if (style.length===0) {
+
+			    ref3.once("value", function(snap) {
+					  
+					  style.push(snap.val());
+					  createMap(style[0]);
+					});
+			    }
+
+			}
+
+			  function createMap(mapstyle) {
+
+			  var options = {
+			  mapTypeControlOptions: {
+			    mapTypeIds: ['Styled']
+			  },
+			    center: new google.maps.LatLng(-7.245217594087794, 112.74455556869509),
+			    zoom: 2,
+			    disableDefaultUI: true, 
+			    mapTypeId: 'Styled'
+			  };
+
+				  var div = document.getElementById('map');
+				  map = new google.maps.Map(div, options);
+				  var styledMapType = new google.maps.StyledMapType(mapstyle, { name: 'Styled' });
+				  map.mapTypes.set('Styled', styledMapType);
+				  getMarkers();
+
+			  }
+
+
+			if(markerstyle){
+			 	placeMarker(markerstyle);
+			}
+			 
+
+			function placeMarker(markerstyle) {
+
+				if (markerstyle=="green") {
+					var markericon = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+				}
+			    
+				else if (markerstyle=="blue") {
+					var markericon = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+				}
+
+				else if (markerstyle=="purple") {
+					var markericon = 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png';
+				}
+
+				else if (markerstyle=="yellow") {
+					var markericon = 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
+				}
+
+				else if (markerstyle=="red") {
+					var markericon = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+				}
+
+			    var marker = new google.maps.Marker({
+			        position: {lat:0, lng:0}, 
+			        icon: markericon,
+			        map: map,
+			        animation: google.maps.Animation.DROP,
+			        draggable:true,
+			        title:null,
+			        comment: comment
+			 
+			    });
+
+			    marker.id = uniqueId;
+			    uniqueId++;
+
+			    var infoWindow;
+
+			    google.maps.event.addListener(marker, 'dblclick', function(evt){
+			    	    if (document.getElementById("comment")!=null){
+			    			comment = document.getElementById("comment").value;
+			    			marker.comment = comment;
+			    			infoWindow.close(map, marker);
+
+			    		};
+			            
+			            saveMarker(evt.latLng,marker);
+			    
+			    });
+
+
+
+			    google.maps.event.addListener(marker, "click", function (e) {
+			        var location = e.latLng;
+			        var content = 'Comment: <input type="text" value="" id="comment"><br/></input>';
+			        content += "<br /><input type = 'button' value = 'Delete' onclick = 'DeleteMarker(" + marker.id + ");' value = 'Delete' />";
+			        	infoWindow = new google.maps.InfoWindow({
+			            content: content
+			        });
+			        
+			        infoWindow.open(map, marker);
+
+			    });
+
+			    markers.push(marker);
+			
+			}
+
+			function saveMarker(location, marker) {
+
+			   var lat = marker.getPosition().lat();
+			   var long = marker.getPosition().lng();
+			   var ref = db.ref("/pins");
+			   var pinid = Math.random().toString(36).substr(2, 9);
+			   var icon = marker.icon;
+			   ref.child(pinid).set({lat:lat, lng:long, user: data.somedata, id:pinid, comment:comment, category:icon});
+
+			   createMap(style[0]);
+			 }
+
+
+			function getMarkers() {
+				var ref = db.ref("/pins");
+				ref.once("value", function(snapshot) {
+				var pinuser = snapshot.val();   //Data is in JSON format.
+				k=0;
+				for (var i in pinuser){
+					if (pinuser[i].user==data.somedata){
+								
+								marker = new google.maps.Marker({
+						        position: {lat:pinuser[i].lat, lng:pinuser[i].lng}, 
+						        icon: pinuser[i].category,
+						        map: map,
+						        draggable:false,
+						        title: pinuser[i].id,
+						        comment:pinuser[i].comment,
+						 
+						    });
+
+								marker.id = k;
+								markers.push(marker);
+
+								google.maps.event.addListener(marker, 'click', (function(marker, k) {
+								    return function() {
+								    	
+								    	var content = 'Comment: '+ marker.comment;
+								    	content += "<br /><input type = 'button' va;ue = 'Delete' onclick = 'DeleteMarker(" + marker.id + ");' value = 'Delete' />";
+								    	var infoWindow = new google.maps.InfoWindow({
+								    	    content: content
+								    	});
+								    	
+								    	infoWindow.open(map, marker);
+								                           
+								    }
+								    })(marker, k));
+
+								k=k+1;
+					}
+
+
+				}
+
+
+			});
+			    
+			}
+	}
+
+	function DeleteMarker(id) {
+	        //Find and remove the marker from the Array
+	        var db = firebase.database();
+			var ref = db.ref("/pins");
+	        
+	        for (var i = 0; i < markers.length; i++) {
+	            if (markers[i].id == id) {
+	                //Remove the marker from Map                  
+	                markers[i].setMap(null);
+	                //Remove the marker from array.
+	                
+	                if(markers[i].title!=null){
+	                ref.child(markers[i].title).remove();
+	            	}
+
+	                markers.splice(i, 1);
+
+	            	
+	                return;
+	            }
+	        }
+	    };
+
+	    function changeMapStyle(mapstyle) {
+	    	style=[];
+	    	var db = firebase.database();
+	    	var url = "/maps/"+ activeUser;
+			var ref = db.ref(url);
+			ref.update({styling:mapstyle});
+			initMap();
+			changestyle=true;
+
+	    };
+
+	    function changeMapName(newName) {
+	    	var db = firebase.database();
+	    	var url = "/maps/"+ activeUser;
+			var ref = db.ref(url);
+			ref.update({mapName:newName});
+	    };
+
+	    $("#gotit").on("click", function(){
+	    	$("#info").hide();
+	    	$("#infosmall").show();
+	    })
+
+	    $("#infosmall").on("click", function(){
+	    	$("#info").show();
+	    	$("#infosmall").hide();
+	    })
+
+
+			</script>
+
+			<script type="text/javascript">
+
+	$(function () {
+    //Loop through all Labels with class 'editable'.
+    $(".editable").each(function () {
+        //Reference the Label.
+        var label = $(this);
+        var newName;
+ 
+        //Add a TextBox next to the Label.
+        label.after("<input id='jqueryInputBox' type = 'text' style = 'display:none' />");
+ 
+        //Reference the TextBox.
+        var textbox = $(this).next();
+ 
+        //Set the name attribute of the TextBox.
+        textbox[0].name = this.id.replace("lbl", "txt");
+
+        //Assign the value of Label to TextBox.
+        textbox.val(label.html());
+
+        //When Label is clicked, hide Label and show TextBox.
+        label.click(function () {
+            $(this).hide();
+            $(this).next().show();
+        });
+ 
+        //When focus is lost from TextBox, hide TextBox and show Label.
+        textbox.focusout(function () {
+            $(this).hide();
+            $(this).prev().html($(this).val());
+            $(this).prev().show();
+            newName = $(".editable").text();
+            changeMapName(newName);
+        });
+    });
+});
+</script>
+	</body>
+</html>
+

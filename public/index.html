@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html ng-app="chat">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.min.css">
+		<link rel="stylesheet/less" type="text/css" href="main.less">
+		<script src="https://www.gstatic.com/firebasejs/3.6.10/firebase.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-route.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/1.3.3/ui-bootstrap-tpls.min.js"></script>
+		<!-- not used in this project but very usefull for many things-->
+		<title>Map</title>
+	</head>
+
+	<body>
+		
+	<div class="main-body">
+		<div ng-view></div>
+		<div class="row col-xs-12 buffer"></div>
+	
+		
+	</div>
+	    <script>  var config = {
+	    	apiKey: "AIzaSyDhntvPeLVBQ-nwppwAi2Gsqh7rBvT7Vl4",
+	    	  authDomain: "intnet-project.firebaseapp.com",
+	    	  databaseURL: "https://intnet-project.firebaseio.com",
+	    	  storageBucket: "intnet-project.appspot.com",
+	    	  messagingSenderId: "675053245114"
+		  };
+		</script>
+
+		<script src = "/socket.io/socket.io.js"></script>
+		<script src = "app.js"></script>
+		<script src = "controllers.js"></script>
+		<script src = "services.js"></script>
+	</body>
+</html>

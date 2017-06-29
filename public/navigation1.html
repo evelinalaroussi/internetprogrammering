@@ -1,0 +1,22 @@
+<nav class="navbar navbar-default navbar-inverse navbar-static-top" role="navigation" ng-controller="navigationController">
+			<div class="container">
+			<!-- Brand and toggle get grouped for better mobile display -->
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-brand-centered" id="indexCollapseBtn">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<div ng-click="redirect('list')" class="navbar-brand navbar-brand-centered" style="line-height: 1em; cursor: pointer;" id="indexStayAWhileBtn">Beautiful Maps</div>
+				</div>
+
+				<!-- Collect the nav links, forms, and other content for toggling -->
+				<div class="collapse navbar-collapse" id="navbar-brand-centered">
+					<ul class="nav navbar-nav">
+						<li ng-click="redirect('login')" ng-class="location == '/login' ? 'active' : ''" id="indexQueuesBtn" ><a style="cursor: pointer;">Login</a></li>
+						<li ng-click="redirect('signup')" ng-class="location == '/signup' ? 'active' : ''" id="indexAboutBtn"><a style="cursor: pointer;">Sign up</a></li>
+					</ul>
+				</div><!-- /.navbar-collapse -->
+			</div><!-- /.container-fluid -->
+		</nav>

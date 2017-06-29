@@ -1,0 +1,9 @@
+<div ng-include="'navigation1.html'"></div>
+<div class="text-box col-md-4 col-md-offset-4" style="text-align: center">
+	<h1>Login</h1>
+	<form ng-submit="done()">
+		<input id="login" placeholder="Enter username" type="text" ng-model="name"  required>
+		<input id="login" type="password" placeholder="Enter Password" ng-model="password" required><br>
+		<input class="btn btn-default" type="submit" id="loginOKBtn" value="Ok">
+	</form>
+</div>

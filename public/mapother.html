@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html ng-app="chat">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.min.css">
+		<link rel="stylesheet/less" type="text/css" href="main.less">
+		<script src="https://www.gstatic.com/firebasejs/3.6.10/firebase.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-route.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/1.3.3/ui-bootstrap-tpls.min.js"></script>
+		<!-- not used in this project but very usefull for many things-->
+		<title>Map</title>
+	</head>
+
+	<body style="background-image:none !important">
+
+	<div id="map" style="height: 660px; width: 100%;"></div>
+	    <script>  var config = {
+	    	apiKey: "AIzaSyDhntvPeLVBQ-nwppwAi2Gsqh7rBvT7Vl4",
+	    	  authDomain: "intnet-project.firebaseapp.com",
+	    	  databaseURL: "https://intnet-project.firebaseio.com",
+	    	  storageBucket: "intnet-project.appspot.com",
+	    	  messagingSenderId: "675053245114"
+		  };
+		</script>
+		<script async defer
+      	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_NKJtGA9JALONqzCFmJRxUn3-apPg9Gs&callback=initMap">
+      	</script>
+		<script src = "/socket.io/socket.io.js"></script>
+		<script src = "app.js"></script>
+		
+		<script src = "controllers.js"></script>
+		<script src = "services.js"></script>
+		<script>firebase.initializeApp(config);
+			
+			var db = firebase.database();
+
+			var params = location.href.split('?')[1].split('&');
+			data = {};
+			for (x in params)
+			 {
+			data[params[x].split('=')[0]] = params[x].split('=')[1];
+			 }
+
+			var activeUser = data.somedata;
+
+			 var markers = [];
+			 var uniqueId = 1;
+			 var marker;
+			 var k;
+			 var comment = "empty";
+			 var map;
+			 var style =[];
+			 var changestyle;
+
+
+			function initMap() {
+
+
+			var ref2 = db.ref("/maps");
+
+			ref2.once("value", function(snapshot) {
+			  var data = snapshot.val();   //Data is in JSON format.
+			  for (var i in data) {
+
+			  	if (data[i].user==activeUser) {
+			  		var mapType=data[i].styling;
+
+			  	}
+			  }
+			  	setMapStyle(mapType);
+			  });
+
+
+			function setMapStyle(mapType) {
+				var mapURL = "/mapstyles/"+mapType;
+				var ref3 = db.ref(mapURL);
+
+				if (style.length===0) {
+
+			    ref3.once("value", function(snap) {
+					  
+					  style.push(snap.val());
+					  createMap(style[0]);
+					});
+			    }
+
+			}
+
+			  function createMap(mapstyle) {
+			  
+			  var options = {
+			  mapTypeControlOptions: {
+			    mapTypeIds: ['Styled']
+			  },
+			    center: new google.maps.LatLng(-7.245217594087794, 112.74455556869509),
+			    zoom: 2,
+			    disableDefaultUI: true, 
+			    mapTypeId: 'Styled'
+			  };
+
+				  var div = document.getElementById('map');
+				  map = new google.maps.Map(div, options);
+				  var styledMapType = new google.maps.StyledMapType(mapstyle, { name: 'Styled' });
+				  map.mapTypes.set('Styled', styledMapType);
+				  getMarkers();
+
+			  }
+
+
+			function getMarkers() {
+				var ref = db.ref("/pins");
+				ref.once("value", function(snapshot) {
+				var pinuser = snapshot.val();   //Data is in JSON format.
+				k=0;
+				for (var i in pinuser){
+					if (pinuser[i].user==data.somedata){
+							
+								
+								marker = new google.maps.Marker({
+						        position: {lat:pinuser[i].lat, lng:pinuser[i].lng}, 
+						        icon: pinuser[i].category,
+						        map: map,
+						        draggable:false,
+						        title: pinuser[i].id,
+						        comment:pinuser[i].comment,
+
+						 
+						    });
+
+								marker.id = k;
+								markers.push(marker);
+
+								google.maps.event.addListener(marker, 'click', (function(marker, k) {
+								    return function() {
+								    	
+								    	var content = 'Comment: '+ marker.comment;
+								    	var infoWindow = new google.maps.InfoWindow({
+								    	    content: content
+								    	});
+								    	
+								    	infoWindow.open(map, marker);
+								                           
+								    }
+								    })(marker, k));
+
+								k=k+1;
+					}
+				}
+
+
+			});
+			    
+			}
+
+	}
+
+
+			</script>
+	</body>
+</html>
